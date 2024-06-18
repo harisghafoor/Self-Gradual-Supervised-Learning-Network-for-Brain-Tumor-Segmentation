@@ -38,6 +38,6 @@ print ('saving experiment')
 
 try:
     save_exp(ts, losses, sup_losses, unsup_losses,
-             accs, accs_best, idxs, **cfg)
+             accs, accs_best, idxs, config=config)
 except Exception as e:
     print(f"Error in the storing of values as {e}")

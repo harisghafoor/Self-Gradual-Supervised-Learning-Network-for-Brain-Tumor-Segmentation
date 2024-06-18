@@ -73,12 +73,14 @@ class Trainer:
             batch_size=self.config.batch_size,
             num_workers=0,
             shuffle=self.config.shuffle_train,
+            drop_last=True
         )
         test_loader = torch.utils.data.DataLoader(
             dataset=test_dataset,
             batch_size=self.config.batch_size,
             num_workers=0,
             shuffle=False,
+            drop_last=True
         )
 
         if self.config.return_idxs:
