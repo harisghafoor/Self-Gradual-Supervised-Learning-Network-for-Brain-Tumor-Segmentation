@@ -1,6 +1,6 @@
 import numpy as np
 from timeit import default_timer as timer
-import torch 
+import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.nn.utils import weight_norm
@@ -13,8 +13,9 @@ from eval import temporal_loss
 from utils import GaussianNoise, savetime, save_exp
 from model import CNN
 
+
 class Trainer:
-    def __init__(self,seed) -> None:
+    def __init__(self, seed) -> None:
         self.seed = seed
         self.device = self._getdevice()
         self.config = Config()
@@ -24,14 +25,19 @@ class Trainer:
         self.train_loader, self.test_loader, self.indices = self._get_dataloaders(
             self.train_dataset, self.test_dataset
         )
-        self.model = CNN(batch_size=self.config.batch_size,
-                         std=self.config.std,
-                         device=self.device).to(self.device)
-        self.writer = self.get_tensorboard()
+        self.model = self._get_model()
+        self.writer = self._get_tensorboard()
 
-    def get_tensorboard(self):
+    def _get_model(self):
+        return CNN(
+            batch_size=self.config.batch_size,
+            std=self.config.std,
+            device=self.device,
+        ).to(self.device)
+
+    def _get_tensorboard(self):
         return SummaryWriter(log_dir=self.config.experiment_name)
-    
+
     def _getdevice(self):
         if torch.cuda.is_available():
             device = torch.device("cuda")
@@ -73,14 +79,14 @@ class Trainer:
             batch_size=self.config.batch_size,
             num_workers=0,
             shuffle=self.config.shuffle_train,
-            drop_last=True
+            drop_last=True,
         )
         test_loader = torch.utils.data.DataLoader(
             dataset=test_dataset,
             batch_size=self.config.batch_size,
             num_workers=0,
             shuffle=False,
-            drop_last=True
+            drop_last=True,
         )
 
         if self.config.return_idxs:
@@ -145,14 +151,17 @@ class Trainer:
                 optimizer.zero_grad()
                 out = model(images)
                 zcomp = Variable(
-                    z[i * self.config.batch_size : (i + 1) * self.config.batch_size], requires_grad=False
+                    z[i * self.config.batch_size : (i + 1) * self.config.batch_size],
+                    requires_grad=False,
                 ).to(self.device)
                 loss, suploss, unsuploss, nbsup = temporal_loss(
                     out, zcomp, w, labels, self.device
                 )
 
                 # save outputs and losses
-                outputs[i * self.config.batch_size : (i + 1) * self.config.batch_size] = out.data.clone()
+                outputs[
+                    i * self.config.batch_size : (i + 1) * self.config.batch_size
+                ] = out.data.clone()
                 l.append(loss.data.item())
                 supl.append(nbsup * suploss.data.item())
                 unsupl.append(unsuploss.data.item())
@@ -221,10 +230,12 @@ class Trainer:
 
         # test
         model.eval()
-        acc = calc_metrics(model, self.test_loader,device=self.device)
+        acc = calc_metrics(model, self.test_loader, device=self.device)
         if self.config.print_res:
-            print("Accuracy of the network on the 10000 test images: %.2f %%" % (acc))
-
+            print(
+                "Accuracy of the networ on the 10000 test images: %.2f %%"
+                % (acc)
+            )
         # test best model
         checkpoint = torch.load("model_best.pth.tar")
         model.load_state_dict(checkpoint["state_dict"])
@@ -235,5 +246,4 @@ class Trainer:
                 "Accuracy of the network (best model) on the 10000 test images: %.2f %%"
                 % (acc_best)
             )
-
         return acc, acc_best, losses, sup_losses, unsup_losses, self.indices

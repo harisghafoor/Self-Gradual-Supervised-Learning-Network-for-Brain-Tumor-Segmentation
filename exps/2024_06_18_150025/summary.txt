@@ -1,0 +1,19 @@
+GLOB VARS
+n_exp        = 3
+k            = 250
+MODEL VARS
+drop         = 0.5
+std          = 0.15
+w_norm       = True
+OPTIM VARS
+lr           = 0.002
+batch_size   = 500
+TEMP ENSEMBLING VARS
+alpha        = 0.6
+data_norm    = channelwise
+divide_by_bs = False
+
+RESULTS
+best accuracy : 90.4
+accuracy : 90.04333333333334 (+/- 0.37809463835864904)
+accs : [90.4, 89.52, 90.21]

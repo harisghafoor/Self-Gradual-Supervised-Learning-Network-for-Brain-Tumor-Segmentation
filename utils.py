@@ -13,7 +13,9 @@ import torchvision.datasets as datasets
 import torchvision.transforms as tf
 from config import Config
 
+# Global Variables
 config = Config()
+
 
 class GaussianNoise(nn.Module):
 
