@@ -10,7 +10,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn as nn
 from torch.nn.utils import weight_norm
-
+from torchsummary import summary
 
 class GaussianNoise(nn.Module):
 
@@ -27,194 +27,174 @@ class GaussianNoise(nn.Module):
         return x + self.noise
 
 
-# class CNN(nn.Module):
-
-#     def __init__(
-#         self,
-#         batch_size,
-#         std,
-#         p=0.5,
-#         fm1=16,
-#         channel_input=1,
-#         channgel_output=10,
-#         device=None,
-#     ):
-#         super(CNN, self).__init__()
-#         self.device = device
-#         self.input_num_channels = channel_input
-#         self.output_num_channels = channgel_output
-#         self.fm1 = fm1
-#         self.std = std
-#         self.gn = GaussianNoise(
-#             batch_size,
-#             std=self.std,
-#             input_shape=(channel_input, 28, 28),
-#             device=self.device,
-#         )
-#         self.act = nn.ReLU()
-#         self.drop = nn.Dropout(p)
-#         self.conv1 = nn.Conv2d(channel_input, self.fm1, 3, padding=1)
-#         self.conv2 = nn.Conv2d(self.fm1, 2 * self.fm1, 3, padding=1)
-#         self.conv3 = nn.Conv2d(2 * self.fm1, 4 * self.fm1, 3, padding=1)
-#         self.conv4 = nn.Conv2d(4 * self.fm1, 6 * self.fm1, 3, padding=1)
-#         self.conv5 = nn.Conv2d(6 * self.fm1, 8 * self.fm1, 3, padding=1)
-#         self.conv6 = nn.Conv2d(8 * self.fm1, 16 * self.fm1, 3, padding=1)
-#         # self.conv1 = weight_norm(nn.Conv2d(channel_input, self.fm1, 3, padding=1))
-#         # self.conv2 = weight_norm(nn.Conv2d(self.fm1, 2 * self.fm1, 3, padding=1))
-#         # self.conv3 = weight_norm(nn.Conv2d(2 * self.fm1, 4 * self.fm1, 3, padding=1))
-#         # self.conv4 = weight_norm(nn.Conv2d(4 * self.fm1, 6 * self.fm1, 3, padding=1))
-#         # self.conv5 = weight_norm(nn.Conv2d(6 * self.fm1, 8 * self.fm1, 3, padding=1))
-#         # self.conv6 = weight_norm(nn.Conv2d(8 * self.fm1, 16 * self.fm1, 3, padding=1))
-#         self.mp = nn.MaxPool2d(3, stride=2, padding=1)
-
-#     def forward(self, x):
-#         if self.training:
-#             x = self.gn(x)
-
-#         x1 = self.conv1(x)
-#         x1 = self.mp(x1)
-#         x1 = self.act(x1)
-
-#         x2 = self.conv2(x1)
-#         x2 = self.mp(x2)
-#         x2 = self.act(x2)
-
-#         # x3 = self.conv3(x2)
-#         # x3 = self.mp(x3)
-#         # x3 = self.act(x3)
-
-#         # x4 = self.conv4(x3)
-#         # x4 = self.mp(x4)
-#         # x4 = self.act(x4)
-
-#         # x5 = self.conv5(x4)
-#         # x5 = self.mp(x5)
-#         # x5 = self.act(x5)
-
-#         # x6 = self.conv6(x5)
-#         # x6 = self.mp(x6)
-#         # x6 = self.act(x6)
-
-#         # print("shape of x4: ", x2.shape)
-#         # x = self.act(self.mp(self.conv1(x)))
-#         # x = self.act(self.mp(self.conv2(x)))
-#         # x = x.view(-1, 16 * self.fm1 * 7 * 7)
-#         # print("x2 shape: ", x2.shape)
-#         x7 = x2.view(-1, x2.shape[1] * x2.shape[2] * x2.shape[3])
-#         # x7 = x6.view(-1, x6.shape[1] * x6.shape[2] * x6.shape[3])
-#         dropped_out = self.drop(x7)
-#         # print("x3 shape: ", x3.shape)
-#         # print("Shape for Fully Connected Layer: ", x2.shape)
-#         fully_connected_layer = nn.Linear(
-#             x2.shape[1] * x2.shape[2] * x2.shape[3],
-#             self.output_num_channels,
-#             device=self.device,
-#         )
-#         output = fully_connected_layer(dropped_out)
-#         # print("shape of output: ", output.shape)
-#         # x = self.fc(x)
-#         return output
-#         # return dropped_out
+""" Multi Output Attention Unet"""
 
 
-# class GaussianNoise(nn.Module):
-
-#     def __init__(self, batch_size, input_shape=(1, 28, 28), std=0.05,device=None):
-#         super(GaussianNoise, self).__init__()
-#         self.shape = (batch_size,) + input_shape
-#         self.noise = Variable(torch.zeros(self.shape)).to(device)
-#         self.std = std
-
-#     def forward(self, x):
-#         self.noise.data.normal_(0, std=self.std)
-#         return x + self.noise
-
-
-class CNN(nn.Module):
-    def __init__(self, batch_size, std, p=0.5, fm1=16, fm2=32, device=None):
-        super(CNN, self).__init__()
-        self.fm1 = fm1
-        self.fm2 = fm2
-        self.std = std
-        self.device = device
-        self.gn = GaussianNoise(batch_size, std=self.std, device=device)
-        self.act = nn.ReLU()
-        self.drop = nn.Dropout(p)
-        self.conv1 = weight_norm(nn.Conv2d(1, self.fm1, 3, padding=1))
-        self.conv2 = weight_norm(nn.Conv2d(self.fm1, 2 * self.fm1, 3, padding=1))
-        self.conv3 = weight_norm(nn.Conv2d(2 * self.fm1, self.fm1 * 4, 3, padding=1))
-        self.conv4 = weight_norm(nn.Conv2d(self.fm1 * 4, self.fm1 * 8, 3, padding=1))
-        self.conv5 = weight_norm(nn.Conv2d(self.fm1 * 8, self.fm1 * 16, 3, padding=1))
-        self.conv6 = weight_norm(nn.Conv2d(self.fm1 * 16, self.fm1 * 32, 3, padding=1))
-        self.mp = nn.MaxPool2d(3, stride=4, padding=1)
-        self.fc = nn.Linear(64 * 7 * 7, 10, device=device)
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(ConvBlock, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(
+                in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True
+            ),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(
+                out_channels,
+                out_channels,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                bias=True,
+            ),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+        )
 
     def forward(self, x):
-        if self.training:
-            x = self.gn(x)
-
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x = self.conv3(x)
-        x = self.mp(x)
-        x = self.act(x)
-
-        # x = self.conv2(x)
-        # x = self.mp(x)
-        # x = self.act(x)
-
-        # x = self.conv3(x)
-        # x = self.mp(x)
-        # x = self.act(x)
-
-        # x = self.conv4(x)
-        # # x = self.mp(x)
-        # x = self.act(x)
-
-        # x = self.conv5(x)
-        # x = self.mp(x)
-        # x = self.act(x)
-
-        # x = self.conv6(x)
-        # x = self.mp(x)
-        # x = self.act(x)
-
-        # x = self.act(self.mp(self.conv1(x)))
-        # # print("shape of x1: ", x.shape)
-        # x = self.act(self.mp(self.conv2(x)))
-        # # print("shape of x2: ", x.shape)
-        # x = self.act(self.mp(self.conv3(x)))
-        # print("shape of x3: ", x.shape)
-        x_prime = x
-        # print("shape of x: ", x.shape)
-        x = x.view(-1, x_prime.shape[1] * x_prime.shape[2] * x_prime.shape[3])
-        # print("shape of x: ", x.shape)
-        x = self.drop(x)
-        x = self.fc(x)
-        # print("At the momemnt the shape of x is: ", x_prime.shape)
-        # x = nn.Linear(
-        #     x_prime.shape[1] * x_prime.shape[2] * x_prime.shape[3],
-        #     10,
-        #     device=self.device,
-        # )(x)
-
-        # x = nn.Linear(
-        #     16 * 14 * 14,
-        #     10,
-        #     device=self.device,
-        # )(x)
-
+        x = self.conv(x)
         return x
 
 
+class UpConv(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(UpConv, self).__init__()
+        # self.conv_transposed = nn.Upsample(scale_factor=2)
+        self.up_medium = nn.ConvTranspose2d(
+            in_channels, out_channels, kernel_size=2, stride=2, padding=1
+        )
+        # self.
+        self.up = nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv2d(
+                in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True
+            ),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+        )
+
+    def forward(self, x):
+        # print("Upsampling Shape : ", self.conv_transposed(x).shape)
+        # print("Upsampling Shape By medium method: ", self.up_medium(x).shape)
+        x = self.up(x)
+        return x
+
+
+class Unet(nn.Module):
+    """
+    AttentionUNetppGradual is a class that implements the Attention UNet++ model with gradual supervision for superior segmentation.
+
+    Args:
+        img_ch (int): Number of input channels (default: 3)
+        output_ch (int): Number of output channels (default: 1)
+    """
+
+    def __init__(self, img_ch=3, output_ch=1):
+        super(Unet, self).__init__()
+
+        self.MaxPool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.Conv1 = ConvBlock(img_ch, 64)
+        self.Conv2 = ConvBlock(64, 128)
+        # self.Conv3 = ConvBlock(128, 256)
+        # self.Conv4 = ConvBlock(256, 512)
+
+        # Bottleneck convolutional operation\
+        self.Conv5 = ConvBlock(128, 256)
+        # self.Conv5 = ConvBlock(512, 1024)
+
+        # self.Up4 = UpConv(1024, 512)
+        # self.UpConv4 = ConvBlock(1024, 512)
+
+        # self.Up3 = UpConv(512, 256)
+        # self.UpConv3 = ConvBlock(512, 256)
+
+        self.Up2 = UpConv(256, 128)
+        self.UpConv2 = ConvBlock(256, 128)
+
+        self.Up1 = UpConv(128, 64)
+        self.UpConv1 = ConvBlock(128, 64)
+
+        self.final_conv = nn.Conv2d(64, output_ch, kernel_size=1, stride=1, padding=0)
+
+    def forward(self, x):
+        """
+        Forward pass of the AttentionUNetppGradual model.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (batch_size, channels, height, width)
+
+        Returns:
+            out (torch.Tensor): Output tensor of shape (batch_size, output_channels, height, width)
+            ds_out (list): List of deep supervision outputs, each of shape (batch_size, output_channels, height, width)
+        """
+        e1 = self.Conv1(x)
+        # print("Conv1 Shape : ", e1.shape)
+        p1 = self.MaxPool(e1)
+        # print("Max Pool 1 Shape : ", p1.shape)
+
+        e2 = self.Conv2(p1)
+        # print("Conv2 Shape : ", e2.shape)
+        p2 = self.MaxPool(e2)
+        # print("Max Pool 2 Shape : ", p2.shape)
+
+        # e3 = self.Conv3(p2)
+        # # print("Conv3 Shape : ", e3.shape)
+        # p3 = self.MaxPool(e3)
+        # # print("MAx Pool 3 Shape : ", p3.shape)
+
+        # e4 = self.Conv4(p3)
+        # # print("Conv4 Shape : ", e4.shape)
+        # p4 = self.MaxPool(e4)
+        # # print("Max pool4 Shape : ", p4.shape)
+
+        # bottle_neck = self.Conv5(p4)
+        bottle_neck = self.Conv5(p2)
+
+        # print("Bottleneck Shape : ", bottle_neck.shape)
+
+        # d4 = self.Up4(bottle_neck)
+        # # print("Deconv4 Shape : ", d4.shape)
+        # d4 = torch.cat((d4, e4), dim=1)
+        # # print("Skip Connection 4 Shape : ", d4.shape)
+        # d4 = self.UpConv4(d4)
+        # # print("Deconv4 Final Shape : ", d4.shape)
+
+        # d3 = self.Up3(d4)
+        # # print("D7 Shape : ", d3.shape)
+        # d3 = torch.cat((d3, e3), dim=1)
+        # # print("Skip Connection Deconv-3 Shape : ", d3.shape)
+        # d3 = self.UpConv3(d3)
+        # # print("Deconv3 Final Shape : ", d3.shape)
+
+        # d2 = self.Up2(d3)
+        d2 = self.Up2(bottle_neck)
+        # print("Deconv2 Shape : ", d2.shape)
+        d2 = torch.cat((d2, e2), dim=1)
+        # print("Skip Connection Deconv-2 Shape : ", d2.shape)
+        d2 = self.UpConv2(d2)
+        # print("Deconv2 Final Shape : ", d2.shape)
+
+
+        d1 = self.Up1(d2)
+        # print("Deconv2 Shape : ", d1.shape)
+        d1 = torch.cat((d1, e1), dim=1)
+        # print("Skip Connection Deconv-1 Shape : ", d1.shape)
+        d1 = self.UpConv1(d1)
+        # print("Deconv1 Final Shape : ", d1.shape)
+
+        out = self.final_conv(d1)
+        return out
+
+
 if __name__ == "__main__":
-    device = torch.device("mps")
-    model = CNN(100, 0.05, device=device).to(device)
-    # model.train()
-    # print("Printing the Model Behaviour During training",model.training)
-    # model.eval()
-    # print("Printing the Model Behaviour During evaluation",model.training)
-    input_x = torch.randn(100, 1, 28, 28).to(device)
-    output_x = model(input_x)
-    print(input_x.shape)
-    print(output_x.shape)
+    device = torch.device("cpu")
+    # x = torch.randn((16, 3, 512, 512)).to(device)
+    f = Unet().to(device)
+    # main_output = f(x)
+    # print("Main Input Shape:", x.shape)
+    # print("Main Output Shape:", main_output.shape)
+    # print(f)
+    print(summary(f, (3, 512, 512)))
+#     print("Second Last Decoder Output Shape:", ds_outputs[0].shape)
+#     print("Third Last Decoder Output Shape:", ds_outputs[1].shape)
