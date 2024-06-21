@@ -11,7 +11,7 @@ class Config:
     H = 256
     W = 256
     batch_size = 32
-    num_epochs = 11
+    num_epochs = 100
     lr = 0.1
     momentum = 0.9
     weight_decay = 0.0005
