@@ -23,10 +23,10 @@ class Trainer:
         self.device = self._getdevice()
         self.config = Config()
         self.train_dataset, self.test_dataset = prepare_dataset(
-            train_x=sorted(glob(os.path.join((self.config.train_x), "*"))),
-            train_y=sorted(glob(os.path.join((self.config.train_y), "*"))),
-            valid_x=sorted(glob(os.path.join((self.config.valid_x), "*"))),
-            valid_y=sorted(glob(os.path.join((self.config.valid_y), "*"))),
+            train_x=sorted(glob(os.path.join((self.config.train_x), "*")))[:20],
+            train_y=sorted(glob(os.path.join((self.config.train_y), "*")))[:20],
+            valid_x=sorted(glob(os.path.join((self.config.valid_x), "*")))[:20],
+            valid_y=sorted(glob(os.path.join((self.config.valid_y), "*")))[:20],
             H=self.config.H,
             W=self.config.W,
         )
@@ -65,13 +65,13 @@ class Trainer:
             dataset=train_dataset,
             batch_size=self.config.batch_size,
             shuffle=True,
-            num_workers=2,
+            num_workers=0,
         )
         test_loader = DataLoader(
             dataset=test_dataset,
             batch_size=self.config.batch_size,
             shuffle=False,
-            num_workers=2,
+            num_workers=0,
         )
         return train_loader, test_loader
 

@@ -21,4 +21,6 @@ class Config:
     shuffle_valid = True
     print_res = True
     experiment_name = "fully_supervised_thyroid_nodules"
+    n_exps = 3
+    seeds = rng.randint(10000, size=n_exps)
     # c = int(batch_size / 2)
