@@ -184,6 +184,7 @@ class Unet(nn.Module):
         # print("Deconv1 Final Shape : ", d1.shape)
 
         out = self.final_conv(d1)
+        # out = torch.sigmoid(out)
         return out
 
 

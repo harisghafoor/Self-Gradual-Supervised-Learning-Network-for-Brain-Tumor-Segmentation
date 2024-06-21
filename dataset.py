@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import torch
 from torch.utils.data import Dataset
-
+from glob import glob
 # from torchvision import transforms
 
 
@@ -16,8 +16,6 @@ class ThyroidNodules(Dataset):
             images_path (list of str): List of paths to lung nodule images.
             masks_path (list of str): List of paths to lung nodule masks.
             image_size (tuple): Desired image size (height and width).
-            kernel_size_1 (int): First dilated mask kernel size.
-            kernel_size_2 (int): Second dilated mask kernel size.
         """
         self.images_path = images_path
         self.masks_path = masks_path
@@ -44,7 +42,7 @@ class ThyroidNodules(Dataset):
         mask = cv2.resize(mask, self.to_return_size)
         mask = mask / mask.max()
         mask = np.expand_dims(mask, axis=0)
-        mask = mask.astype(np.uint8)
+        mask = mask.astype(np.float32)
         mask = torch.from_numpy(mask)
 
         return image, mask
@@ -55,8 +53,11 @@ class ThyroidNodules(Dataset):
 
 if __name__ == "__main__":
     dataset = ThyroidNodules(
-        image_size=(28, 28),
-        images_path="/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-image",
-        masks_path="/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-mask",
+        image_size=(256, 256),
+        images_path= sorted(glob(os.path.join("/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-image",'*'))),
+        masks_path= sorted(glob(os.path.join("/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-mask",'*')))
     )
-    print(dataset.data)
+    # print(dataset[0].shape)
+    print("Sample Image Shape",dataset.__getitem__(0)[0].shape)
+    print("Sample Mask Shape",dataset.__getitem__(0)[1].shape)
+

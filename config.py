@@ -8,11 +8,11 @@ class Config:
     train_y = "/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-mask"
     valid_x = "/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/test-image"
     valid_y = "/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/test-mask"
-    H = 128
-    W = 128
+    H = 256
+    W = 256
     batch_size = 32
-    num_epochs = 100
-    lr = 0.001
+    num_epochs = 11
+    lr = 0.1
     momentum = 0.9
     weight_decay = 0.0005
     n_samples = 100
@@ -21,3 +21,4 @@ class Config:
     shuffle_valid = True
     print_res = True
     experiment_name = "fully_supervised_thyroid_nodules"
+    # c = int(batch_size / 2)
