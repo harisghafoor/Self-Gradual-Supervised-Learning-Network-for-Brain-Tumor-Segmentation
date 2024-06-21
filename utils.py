@@ -12,6 +12,7 @@ import torch.nn as nn
 import torchvision.datasets as datasets
 import torchvision.transforms as tf
 from config import Config
+from dataset import ThyroidNodules
 
 # Global Variables
 config = Config()
@@ -30,25 +31,23 @@ class GaussianNoise(nn.Module):
         return x + self.noise
 
 
-def prepare_mnist(path):
+def prepare_dataset(train_x, train_y, valid_x, valid_y, H, W):
     # normalize data
     m = (0.1307,)
     st = (0.3081,)
     normalize = tf.Normalize(m, st)
-
-    # load train data
-    train_dataset = datasets.MNIST(
-        root=path,
-        train=True,
-        transform=tf.Compose([tf.ToTensor(), normalize]),
-        download=True,
+    # Create datasets and dataloaders for this fold
+    train_dataset = ThyroidNodules(
+        train_x,
+        train_y,
+        image_size=(H, W),
+        # transform=tf.Compose([tf.ToTensor(), normalize]),
     )
-
-    # load test data
-    test_dataset = datasets.MNIST(
-        root=path, train=False, transform=tf.Compose([tf.ToTensor(), normalize])
+    test_dataset = ThyroidNodules(
+        valid_x,
+        valid_y,
+        image_size=(H, W),
     )
-
     return train_dataset, test_dataset
 
 

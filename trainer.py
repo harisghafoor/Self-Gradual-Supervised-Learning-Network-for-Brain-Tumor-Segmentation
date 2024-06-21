@@ -6,34 +6,37 @@ from torch.autograd import Variable
 from torch.nn.utils import weight_norm
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
+from torch.utils.data import DataLoader
 
-from utils import calc_metrics, prepare_mnist, weight_schedule
+from utils import calc_metrics, prepare_dataset, weight_schedule
 from config import Config
 from eval import temporal_loss
 from utils import GaussianNoise, savetime, save_exp
-from model import CNN
-
+from model import Unet
+from glob import glob
+import os
 
 class Trainer:
     def __init__(self, seed) -> None:
         self.seed = seed
         self.device = self._getdevice()
         self.config = Config()
-        self.train_dataset, self.test_dataset = prepare_mnist(
-            path=self.config.dataset_path
+        self.train_dataset, self.test_dataset = prepare_dataset(
+            train_x=sorted(glob(os.path.join((self.config.train_x),"*"))),
+            train_y=sorted(glob(os.path.join((self.config.train_y),"*"))),
+            valid_x=sorted(glob(os.path.join((self.config.valid_x),"*"))),
+            valid_y=sorted(glob(os.path.join((self.config.valid_y),"*"))),
+            H=self.config.H,
+            W=self.config.W,
         )
-        self.train_loader, self.test_loader, self.indices = self._get_dataloaders(
+        self.train_loader, self.test_loader = self._get_dataloaders(
             self.train_dataset, self.test_dataset
         )
         self.model = self._get_model()
         self.writer = self._get_tensorboard()
 
     def _get_model(self):
-        return CNN(
-            batch_size=self.config.batch_size,
-            std=self.config.std,
-            device=self.device,
-        ).to(self.device)
+        return Unet(img_ch=3, output_ch=1).to(self.device)
 
     def _get_tensorboard(self):
         return SummaryWriter(log_dir=self.config.experiment_name)
@@ -53,44 +56,18 @@ class Trainer:
         test_dataset,
     ):
 
-        n = len(train_dataset)
-        rrng = np.random.RandomState(self.seed)
-        n_classes = int(self.config.n_classes)
-        k = int(self.config.k)
-        cpt = 0
-        indices = torch.zeros(k)
-        other = torch.zeros(n - k)
-        card = k // n_classes
-        for i in range(n_classes):
-            class_items = (train_dataset.train_labels == i).nonzero().squeeze()
-            n_class = len(class_items)
-            rd = np.random.permutation(np.arange(n_class))
-            indices[i * card : (i + 1) * card] = class_items[rd[:card]]
-            other[cpt : cpt + n_class - card] = class_items[rd[card:]]
-            cpt += n_class - card
-
-        other = other.long()
-        indices = indices.long()
-
-        train_dataset.train_labels[other] = -1
-
-        train_loader = torch.utils.data.DataLoader(
+        train_loader = DataLoader(
             dataset=train_dataset,
             batch_size=self.config.batch_size,
-            num_workers=0,
-            shuffle=self.config.shuffle_train,
-            drop_last=True,
+            shuffle=True,
+            num_workers=2,
         )
-        test_loader = torch.utils.data.DataLoader(
+        test_loader = DataLoader(
             dataset=test_dataset,
             batch_size=self.config.batch_size,
-            num_workers=0,
             shuffle=False,
-            drop_last=True,
+            num_workers=2,
         )
-
-        if self.config.return_idxs:
-            return train_loader, test_loader, indices
         return train_loader, test_loader
 
     def fit(self):
@@ -232,10 +209,7 @@ class Trainer:
         model.eval()
         acc = calc_metrics(model, self.test_loader, device=self.device)
         if self.config.print_res:
-            print(
-                "Accuracy of the networ on the 10000 test images: %.2f %%"
-                % (acc)
-            )
+            print("Accuracy of the networ on the 10000 test images: %.2f %%" % (acc))
         # test best model
         checkpoint = torch.load("model_best.pth.tar")
         model.load_state_dict(checkpoint["state_dict"])
