@@ -12,7 +12,7 @@ class Config:
     W = 256
     batch_size = 32
     num_epochs = 100
-    lr = 0.1
+    lr = 0.001
     momentum = 0.9
     weight_decay = 0.0005
     n_samples = 100

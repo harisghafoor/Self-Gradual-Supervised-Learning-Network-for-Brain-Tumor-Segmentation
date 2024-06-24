@@ -48,7 +48,7 @@ def calculate_metrics(y_true, y_pred, threshold):
 
     # Prediction
     y_pred = torch.sigmoid(y_pred)
-    y_pred = y_pred.cpu().numpy()
+    y_pred = y_pred.detach().cpu().numpy()
     y_pred = y_pred > threshold
     y_pred = y_pred.astype(np.uint8)
     y_pred = y_pred.reshape(-1)

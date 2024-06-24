@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from utils import calc_metrics, prepare_dataset, weight_schedule
 from config import Config
-from eval import compute_loss, DiceLoss
+from eval import compute_loss, DiceLoss, calculate_metrics
 from utils import GaussianNoise, savetime, save_exp
 from model import Unet
 from glob import glob
@@ -23,10 +23,10 @@ class Trainer:
         self.device = self._getdevice()
         self.config = Config()
         self.train_dataset, self.test_dataset = prepare_dataset(
-            train_x=sorted(glob(os.path.join((self.config.train_x), "*")))[:20],
-            train_y=sorted(glob(os.path.join((self.config.train_y), "*")))[:20],
-            valid_x=sorted(glob(os.path.join((self.config.valid_x), "*")))[:20],
-            valid_y=sorted(glob(os.path.join((self.config.valid_y), "*")))[:20],
+            train_x=sorted(glob(os.path.join((self.config.train_x), "*"))),
+            train_y=sorted(glob(os.path.join((self.config.train_y), "*"))),
+            valid_x=sorted(glob(os.path.join((self.config.valid_x), "*"))),
+            valid_y=sorted(glob(os.path.join((self.config.valid_y), "*"))),
             H=self.config.H,
             W=self.config.W,
         )
@@ -136,6 +136,7 @@ class Trainer:
                     images = Variable(images).to(self.device)
                     labels = Variable(labels, requires_grad=False).to(self.device)
                     out = model(images)
+                    out = F.sigmoid(out)
                     dice_score = 1 - self.dice_loss(inputs=out, targets=labels).item()
                     batch_dice_score_valid.append(dice_score)
                 if self.config.print_res:
@@ -148,6 +149,21 @@ class Trainer:
                 )
 
         return model, losses
+
+    def predict(self, model):
+        model.eval()
+        results = {"id": [], "metrics": []}
+        for i, (images, labels) in enumerate(self.test_loader):
+            images = Variable(images).to(self.device)
+            labels = Variable(labels, requires_grad=False).to(self.device)
+            out = model(images)
+            out = F.sigmoid(out)
+            results["id"].append(i)
+            results["metrics"].append(
+                calculate_metrics(y_true=labels, y_pred=out, threshold=0.5)
+            )
+        return results
+
 
 if __name__ == "__main__":
     trainer = Trainer(seed=7)
