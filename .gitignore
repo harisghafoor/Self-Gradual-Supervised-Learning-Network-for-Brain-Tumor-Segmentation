@@ -5,3 +5,9 @@
 *.pyc
 __pycache__/model.cpython-310.pyc
 /__pycache__
+*.tar
+model_best.pth.tar
+/model_best.pth/data
+/model_best.pth
+*.tar
+*.pyc
