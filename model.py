@@ -96,18 +96,18 @@ class Unet(nn.Module):
 
         self.Conv1 = ConvBlock(img_ch, 64)
         self.Conv2 = ConvBlock(64, 128)
-        # self.Conv3 = ConvBlock(128, 256)
-        # self.Conv4 = ConvBlock(256, 512)
+        self.Conv3 = ConvBlock(128, 256)
+        self.Conv4 = ConvBlock(256, 512)
 
         # Bottleneck convolutional operation\
-        self.Conv5 = ConvBlock(128, 256)
-        # self.Conv5 = ConvBlock(512, 1024)
+        # self.Conv5 = ConvBlock(128, 256)
+        self.Conv5 = ConvBlock(512, 1024)
 
-        # self.Up4 = UpConv(1024, 512)
-        # self.UpConv4 = ConvBlock(1024, 512)
+        self.Up4 = UpConv(1024, 512)
+        self.UpConv4 = ConvBlock(1024, 512)
 
-        # self.Up3 = UpConv(512, 256)
-        # self.UpConv3 = ConvBlock(512, 256)
+        self.Up3 = UpConv(512, 256)
+        self.UpConv3 = ConvBlock(512, 256)
 
         self.Up2 = UpConv(256, 128)
         self.UpConv2 = ConvBlock(256, 128)
@@ -138,37 +138,37 @@ class Unet(nn.Module):
         p2 = self.MaxPool(e2)
         # print("Max Pool 2 Shape : ", p2.shape)
 
-        # e3 = self.Conv3(p2)
+        e3 = self.Conv3(p2)
         # # print("Conv3 Shape : ", e3.shape)
-        # p3 = self.MaxPool(e3)
+        p3 = self.MaxPool(e3)
         # # print("MAx Pool 3 Shape : ", p3.shape)
 
-        # e4 = self.Conv4(p3)
+        e4 = self.Conv4(p3)
         # # print("Conv4 Shape : ", e4.shape)
-        # p4 = self.MaxPool(e4)
+        p4 = self.MaxPool(e4)
         # # print("Max pool4 Shape : ", p4.shape)
 
-        # bottle_neck = self.Conv5(p4)
-        bottle_neck = self.Conv5(p2)
+        bottle_neck = self.Conv5(p4)
+        # bottle_neck = self.Conv5(p2)
 
         # print("Bottleneck Shape : ", bottle_neck.shape)
 
-        # d4 = self.Up4(bottle_neck)
+        d4 = self.Up4(bottle_neck)
         # # print("Deconv4 Shape : ", d4.shape)
-        # d4 = torch.cat((d4, e4), dim=1)
+        d4 = torch.cat((d4, e4), dim=1)
         # # print("Skip Connection 4 Shape : ", d4.shape)
-        # d4 = self.UpConv4(d4)
+        d4 = self.UpConv4(d4)
         # # print("Deconv4 Final Shape : ", d4.shape)
 
-        # d3 = self.Up3(d4)
+        d3 = self.Up3(d4)
         # # print("D7 Shape : ", d3.shape)
-        # d3 = torch.cat((d3, e3), dim=1)
+        d3 = torch.cat((d3, e3), dim=1)
         # # print("Skip Connection Deconv-3 Shape : ", d3.shape)
-        # d3 = self.UpConv3(d3)
+        d3 = self.UpConv3(d3)
         # # print("Deconv3 Final Shape : ", d3.shape)
 
-        # d2 = self.Up2(d3)
-        d2 = self.Up2(bottle_neck)
+        d2 = self.Up2(d3)
+        # d2 = self.Up2(bottle_neck)
         # print("Deconv2 Shape : ", d2.shape)
         d2 = torch.cat((d2, e2), dim=1)
         # print("Skip Connection Deconv-2 Shape : ", d2.shape)
