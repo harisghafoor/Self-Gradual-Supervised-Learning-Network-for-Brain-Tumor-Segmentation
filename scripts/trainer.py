@@ -1,20 +1,20 @@
+import os
 import numpy as np
-from timeit import default_timer as timer
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-from torch.nn.utils import weight_norm
 import torch.nn.functional as F
+
+from torch.autograd import Variable
+from timeit import default_timer as timer
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
-from utils import calc_metrics, prepare_dataset, weight_schedule
-from config import Config
-from eval import compute_loss, DiceLoss, calculate_metrics
-from utils import GaussianNoise, savetime, save_exp
+from utils import prepare_dataset
+from ..config import Config
+from loss import compute_loss, DiceLoss, calculate_metrics
 from model import Unet
 from glob import glob
-import os
+
 
 
 class Trainer:
@@ -147,7 +147,7 @@ class Trainer:
                 writer.add_scalar(
                     "Loss/validation_dice_score", np.mean(batch_dice_score_valid), epoch
                 )
-
+        writer.close()
         return model, losses
 
     def predict(self, model):

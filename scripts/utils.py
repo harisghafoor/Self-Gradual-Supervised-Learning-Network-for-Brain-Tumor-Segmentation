@@ -1,20 +1,28 @@
-from datetime import datetime
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.gridspec as gsp
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import torch
-from torch.autograd import Variable
-import torch.nn as nn
-import torchvision.datasets as datasets
-import torchvision.transforms as tf
-from config import Config
-from dataset import ThyroidNodules
 import cv2
+import torch.nn as nn
+import torchvision.transforms as tf
+import matplotlib.gridspec as gsp
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("Agg")
+
+
+from torch.autograd import Variable
+from datetime import datetime
 from matplotlib.lines import Line2D
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    jaccard_score,
+    precision_score,
+    recall_score,
+)
+
+from ..config import Config
+from dataset import ThyroidNodules
 
 # Global Variables
 config = Config()
@@ -253,3 +261,25 @@ def plot_sample(x, y, out, cnt, RESULT_DIR, THRESHOLD):
     plt.show()
     
     return x, y, out
+
+def calculate_metrics(y_true, y_pred, threshold):
+    # Ground truth
+    y_true = y_true.cpu().numpy()
+    y_true = y_true > threshold
+    y_true = y_true.astype(np.uint8)
+    y_true = y_true.reshape(-1)
+
+    # Prediction
+    # y_pred = torch.sigmoid(y_pred)
+    y_pred = y_pred.detach().cpu().numpy()
+    y_pred = y_pred > threshold
+    y_pred = y_pred.astype(np.uint8)
+    y_pred = y_pred.reshape(-1)
+
+    score_jaccard = jaccard_score(y_true, y_pred)
+    score_f1 = f1_score(y_true, y_pred)
+    score_recall = recall_score(y_true, y_pred)
+    score_precision = precision_score(y_true, y_pred)
+    score_acc = accuracy_score(y_true, y_pred)
+
+    return score_jaccard, score_f1, score_recall, score_precision, score_acc

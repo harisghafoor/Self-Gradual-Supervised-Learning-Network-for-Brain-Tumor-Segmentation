@@ -1,32 +1,13 @@
 import os
-import numpy as np
-import cv2
 import torch
-from torch.utils.data import Dataset
-from dataset import ThyroidNodules
-from torch.utils.data import DataLoader
-from glob import glob
-from trainer import Trainer
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    jaccard_score,
-    precision_score,
-    recall_score,
-)
-from eval import compute_loss, DiceLoss, calculate_metrics
-from timeit import default_timer as timer
-import torch
-import torch.nn as nn
-from torch.autograd import Variable
-from torch.nn.utils import weight_norm
-import torch.nn.functional as F
-from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader
-import matplotlib.pyplot as plt
 import pandas as pd
-from utils import plot_sample
+import torch.nn.functional as F
+
 from tqdm import tqdm
+
+from utils import calculate_metrics
+from timeit import default_timer as timer
+from utils import plot_sample
 
 
 def evaluate_test_data(model, torch_dataset, torch_device, RESULT_DIR, THRESHOLD):

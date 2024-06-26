@@ -2,13 +2,9 @@ import numpy as np
 from timeit import default_timer as timer
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-from torch.nn.utils import weight_norm
 import torch.nn.functional as F
 
-import torch
 from torch.autograd import Variable
-import torch.nn as nn
 from torch.nn.utils import weight_norm
 
 

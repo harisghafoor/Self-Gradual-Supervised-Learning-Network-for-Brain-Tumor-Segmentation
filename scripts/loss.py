@@ -4,13 +4,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    jaccard_score,
-    precision_score,
-    recall_score,
-)
+
 
 
 def temporal_loss(out1, out2, w, labels, device):
@@ -37,30 +31,6 @@ def temporal_loss(out1, out2, w, labels, device):
     sup_loss, nbsup = masked_crossentropy(out1, labels)
     unsup_loss = mse_loss(out1, out2)
     return sup_loss + w * unsup_loss, sup_loss, unsup_loss, nbsup
-
-
-def calculate_metrics(y_true, y_pred, threshold):
-    # Ground truth
-    y_true = y_true.cpu().numpy()
-    y_true = y_true > threshold
-    y_true = y_true.astype(np.uint8)
-    y_true = y_true.reshape(-1)
-
-    # Prediction
-    # y_pred = torch.sigmoid(y_pred)
-    y_pred = y_pred.detach().cpu().numpy()
-    y_pred = y_pred > threshold
-    y_pred = y_pred.astype(np.uint8)
-    y_pred = y_pred.reshape(-1)
-
-    score_jaccard = jaccard_score(y_true, y_pred)
-    score_f1 = f1_score(y_true, y_pred)
-    score_recall = recall_score(y_true, y_pred)
-    score_precision = precision_score(y_true, y_pred)
-    score_acc = accuracy_score(y_true, y_pred)
-
-    return score_jaccard, score_f1, score_recall, score_precision, score_acc
-
 
 # PyTorch
 class DiceLoss(nn.Module):
