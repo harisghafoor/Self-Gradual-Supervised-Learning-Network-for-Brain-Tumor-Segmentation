@@ -9,10 +9,11 @@ from timeit import default_timer as timer
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
-from utils import prepare_dataset
-from ..config import Config
-from loss import compute_loss, DiceLoss, calculate_metrics
-from model import Unet
+from scripts.utils import prepare_dataset,calculate_metrics
+from scripts.loss import compute_loss, DiceLoss
+from scripts.model import Unet
+from config import Config
+
 from glob import glob
 
 

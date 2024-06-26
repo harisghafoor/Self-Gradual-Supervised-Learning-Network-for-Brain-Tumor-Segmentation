@@ -5,10 +5,8 @@ import torch.nn.functional as F
 
 from tqdm import tqdm
 
-from utils import calculate_metrics
+from scripts.utils import calculate_metrics,plot_sample
 from timeit import default_timer as timer
-from utils import plot_sample
-
 
 def evaluate_test_data(model, torch_dataset, torch_device, RESULT_DIR, THRESHOLD):
     cnt = 0

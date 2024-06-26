@@ -21,8 +21,8 @@ from sklearn.metrics import (
     recall_score,
 )
 
-from ..config import Config
-from dataset import ThyroidNodules
+from config import Config
+from scripts.dataset import ThyroidNodules
 
 # Global Variables
 config = Config()

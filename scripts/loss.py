@@ -57,7 +57,6 @@ class DiceLoss(nn.Module):
         dice_coefficient = (2.0 * intersection + smooth) / (
             inputs.sum(axis=1) + targets.sum(axis=1) + smooth
         )
-
         dice_coefficient = dice_coefficient.mean(axis=0)
         dice_loss = 1 - dice_coefficient
 
