@@ -33,7 +33,7 @@ def main(config):
     # ssl.device = torch.device("cpu")
     model = ssl.model.to(ssl.device)
     checkpoint = torch.load(
-        "./model_best.pth.tar",
+        "./models/model_best.pth.tar",
         map_location=ssl.device,
     )
     model.load_state_dict(checkpoint["state_dict"])
