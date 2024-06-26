@@ -13,6 +13,8 @@ import torchvision.datasets as datasets
 import torchvision.transforms as tf
 from config import Config
 from dataset import ThyroidNodules
+import cv2
+from matplotlib.lines import Line2D
 
 # Global Variables
 config = Config()
@@ -206,3 +208,48 @@ def save_seed_samples(fname, indices):
         ax.imshow(img)
 
     plt.savefig(fname)
+
+def plot_sample(x, y, out, cnt, RESULT_DIR, THRESHOLD):
+    x = x.detach().cpu().numpy().transpose(1, 2, 0)
+    y = y.detach().cpu().numpy().transpose(1, 2, 0)
+    out = out.detach().cpu().numpy().transpose(1, 2, 0)
+    
+    # Convert to grayscale
+    # x_gray = np.dot(x[..., :3], [0.2989, 0.5870, 0.1140])
+    
+    y = y > THRESHOLD
+    out = out > THRESHOLD
+    y = y.astype(np.uint8)
+    out = out.astype(np.uint8)
+    
+    # Find contours
+    y_contours, _ = cv2.findContours(y[..., 0], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    out_contours, _ = cv2.findContours(out[..., 0], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    fig, ax = plt.subplots(figsize=(5, 5))
+    
+    # Plot the grayscale image
+    ax.imshow(x, cmap='gray')
+    
+    # Plot ground truth contours in blue
+    for contour in y_contours:
+        ax.plot(contour[:, 0, 0], contour[:, 0, 1], color='blue', linewidth=2)
+    
+    # Plot predicted contours in red
+    for contour in out_contours:
+        ax.plot(contour[:, 0, 0], contour[:, 0, 1], color='red', linewidth=2)
+    
+     # Create custom legend handles
+    custom_lines = [Line2D([0], [0], color='blue', lw=2, label='Ground Truth'),
+                    Line2D([0], [0], color='red', lw=2, label='Prediction')]
+    
+    # Add legend to the plot
+    ax.legend(handles=custom_lines, loc='upper right')
+    ax.axis('off')
+    ax.set_title('Visualization of Segmented Thyroid Nodules')
+    
+    # Save the figure
+    fig.savefig(os.path.join(RESULT_DIR, f"results_sample_{cnt}.png"))
+    plt.show()
+    
+    return x, y, out

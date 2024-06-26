@@ -47,7 +47,7 @@ def calculate_metrics(y_true, y_pred, threshold):
     y_true = y_true.reshape(-1)
 
     # Prediction
-    y_pred = torch.sigmoid(y_pred)
+    # y_pred = torch.sigmoid(y_pred)
     y_pred = y_pred.detach().cpu().numpy()
     y_pred = y_pred > threshold
     y_pred = y_pred.astype(np.uint8)
@@ -59,7 +59,7 @@ def calculate_metrics(y_true, y_pred, threshold):
     score_precision = precision_score(y_true, y_pred)
     score_acc = accuracy_score(y_true, y_pred)
 
-    return [score_jaccard, score_f1, score_recall, score_precision, score_acc]
+    return score_jaccard, score_f1, score_recall, score_precision, score_acc
 
 
 # PyTorch
