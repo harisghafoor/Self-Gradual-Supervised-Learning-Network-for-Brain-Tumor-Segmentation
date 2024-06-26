@@ -24,6 +24,6 @@ class Config:
     n_exps = 3
     seeds = rng.randint(10000, size=n_exps)
     # c = int(batch_size / 2)
-    RESULTS_DIR = 'Fully_Supervised_Results'
+    RESULTS_DIR = "Fully_Supervised_Results"
     THRESHOLD = 0.5
-    mode = 'test'
+    mode = "test"
