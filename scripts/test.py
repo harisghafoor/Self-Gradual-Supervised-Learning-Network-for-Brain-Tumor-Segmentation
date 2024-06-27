@@ -14,6 +14,21 @@ def evaluate_test_data(model, torch_dataset,
                     THRESHOLD,save_plots = False,
                     save_csv_file = False,
                     show_progress = False):
+    """ Evaluate the model on the test data
+
+    Args:
+        model (nn.Module): _description_
+        torch_dataset (_type_): _description_
+        torch_device (_type_): _description_
+        RESULT_DIR (str): _description_
+        THRESHOLD (int): _description_
+        save_plots (bool, optional): True if wants to visualize results. Defaults to False.
+        save_csv_file (bool, optional): True if wants to save evaluation scores for test dataset. Defaults to False.
+        show_progress (bool, optional): True if want to see the score in CLI. Defaults to False.
+
+    Returns:
+        pd.DataFrame: Evaluation Summary
+    """
     cnt = 0
     results_dict = {
         "sample_id": [],

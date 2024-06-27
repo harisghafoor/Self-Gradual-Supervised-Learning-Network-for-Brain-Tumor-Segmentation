@@ -17,7 +17,15 @@ from config import Config
 warnings.filterwarnings("ignore")
 
 
-def main(config):
+def main(config: object) -> pd.DataFrame:
+    """ Implement the main function for the pipeline
+
+    Args:
+        config (py): Configuration object that contains all the parameters
+
+    Returns:
+        pd.DataFrame: Sumamry of all test scores for the model
+    """
     rng = np.random.RandomState(26)
     seeds = rng.randint(10000, size=config.n_exps)
     mode = config.mode
@@ -27,7 +35,6 @@ def main(config):
     os.makedirs(os.path.join(RESULTS_DIR, config.experiment_name), exist_ok=True)
     # Initialize the seeds
     seed = seeds[0]
-    ts = savetime()
     # Initialized the object for end to end pipeline
     model = Unet(img_ch=3, output_ch=1).to(device)
     ssl = Trainer(seed=seed, device=device, model=model, config_file=config)

@@ -43,7 +43,22 @@ class GaussianNoise(nn.Module):
         return x + self.noise
 
 
-def prepare_dataset(train_x, train_y, valid_x, valid_y, H, W):
+def prepare_dataset(
+    train_x: list, train_y: list, valid_x: list, valid_y: list, H: int, W: int
+):
+    """Create datasets and dataloaders for this fold
+
+    Args:
+        train_x (list): _description_
+        train_y (list): _description_
+        valid_x (list): _description_
+        valid_y (list): _description_
+        H (int): _description_
+        W (int): _description_
+
+    Returns:
+        torch.utils.data.Dataset
+    """
     # normalize data
     m = (0.1307,)
     st = (0.3081,)
@@ -296,6 +311,11 @@ def calculate_metrics(y_true, y_pred, threshold):
 
 
 def _get_device():
+    """Returns the device to be used for training and inference.
+
+    Returns:
+        torch.device : Device to be used for training and inference
+    """
     if torch.cuda.is_available():
         print("Using GPU")
         device = torch.device("cuda")
@@ -309,13 +329,26 @@ def _get_device():
 
 
 def _get_dataloaders(
-    train_dataset,
-    test_dataset,
-    BATCH_SIZE,
-    NUM_WORKERS,
-    SHUFFLE_TRAIN=True,
-    SHUFFLE_TEST=False,
+    train_dataset: torch.utils.data.Dataset,
+    test_dataset: torch.utils.data.Dataset,
+    BATCH_SIZE: int,
+    NUM_WORKERS: int,
+    SHUFFLE_TRAIN: bool = True,
+    SHUFFLE_TEST: bool = False,
 ):
+    """Returns the dataloaders for training and testing datasets.
+
+    Args:
+        train_dataset (torch.Datsets): Training dataset
+        test_dataset (torch.Datset): Testing dataset
+        BATCH_SIZE (int): Batch size
+        NUM_WORKERS (int): Number of workers to be used for data loading
+        SHUFFLE_TRAIN (bool, optional): Shuffle the samples while loading data . Defaults to True.
+        SHUFFLE_TEST (bool, optional): Shuffle the samples while loading data. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """
 
     train_loader = DataLoader(
         dataset=train_dataset,

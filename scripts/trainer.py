@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,6 +19,8 @@ from glob import glob
 
 
 class Trainer:
+    """  Pytorch Abstraction Trainer class for training the model
+    """
     def __init__(self, seed, device, model, config_file) -> None:
         self.seed = seed
         self.device = device
@@ -30,7 +33,16 @@ class Trainer:
     def _get_tensorboard(self):
         return SummaryWriter(log_dir=self.config.experiment_name)
 
-    def fit(self, train_loader, test_dataset):
+    def fit(self, train_loader, test_dataset) -> pd.DataFrame:
+        """ Fits the Training Data to the model to perform training
+
+        Args:
+            train_loader (torch.utils.data.Dataloader)
+            test_dataset (torch.utils.data.Dataset)
+
+        Returns:
+            _type_: _description_
+        """
         writer = self.writer
         model = self.model
         # setup param optimization
