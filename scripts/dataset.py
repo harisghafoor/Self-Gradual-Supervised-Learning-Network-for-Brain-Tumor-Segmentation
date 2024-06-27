@@ -51,7 +51,6 @@ class ThyroidNodules(Dataset):
     def __len__(self):
         return self.n_samples
 
-
 if __name__ == "__main__":
     dataset = ThyroidNodules(
         image_size=(256, 256),

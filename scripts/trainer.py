@@ -7,9 +7,9 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from timeit import default_timer as timer
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader
 
-from scripts.utils import prepare_dataset,calculate_metrics
+from scripts.utils import prepare_dataset, calculate_metrics
+from scripts.test import evaluate_test_data
 from scripts.loss import compute_loss, DiceLoss
 from scripts.model import Unet
 from config import Config
@@ -17,81 +17,35 @@ from config import Config
 from glob import glob
 
 
-
 class Trainer:
-    def __init__(self, seed) -> None:
+    def __init__(self, seed, device, model, config_file) -> None:
         self.seed = seed
-        self.device = self._getdevice()
-        self.config = Config()
-        self.train_dataset, self.test_dataset = prepare_dataset(
-            train_x=sorted(glob(os.path.join((self.config.train_x), "*"))),
-            train_y=sorted(glob(os.path.join((self.config.train_y), "*"))),
-            valid_x=sorted(glob(os.path.join((self.config.valid_x), "*"))),
-            valid_y=sorted(glob(os.path.join((self.config.valid_y), "*"))),
-            H=self.config.H,
-            W=self.config.W,
-        )
-        self.train_loader, self.test_loader = self._get_dataloaders(
-            self.train_dataset, self.test_dataset
-        )
-        self.model = self._get_model()
+        self.device = device
+        self.config = config_file
+        self.model = model
         self.writer = self._get_tensorboard()
-        self.dice_loss = DiceLoss()
-
-    def _get_model(self):
-        return Unet(img_ch=3, output_ch=1).to(self.device)
+        self.model_save_path = self.config.model_save_path
+        os.makedirs(f"models/{self.config.experiment_name}", exist_ok=True)
 
     def _get_tensorboard(self):
         return SummaryWriter(log_dir=self.config.experiment_name)
 
-    def _getdevice(self):
-        if torch.cuda.is_available():
-            print("Using GPU")
-            device = torch.device("cuda")
-        elif torch.backends.mps.is_available():
-            print("Using Apple MPS")
-            device = torch.device("mps")
-        else:
-            print("Using CPU")
-            device = torch.device("cpu")
-        return device
-
-    def _get_dataloaders(
-        self,
-        train_dataset,
-        test_dataset,
-    ):
-
-        train_loader = DataLoader(
-            dataset=train_dataset,
-            batch_size=self.config.batch_size,
-            shuffle=True,
-            num_workers=0,
-        )
-        test_loader = DataLoader(
-            dataset=test_dataset,
-            batch_size=self.config.batch_size,
-            shuffle=False,
-            num_workers=0,
-        )
-        return train_loader, test_loader
-
-    def fit(self):
+    def fit(self, train_loader, test_dataset):
         writer = self.writer
         model = self.model
         # setup param optimization
         optimizer = torch.optim.Adam(
             model.parameters(),
-            lr=self.config.lr,
+            lr=self.config.LR,
         )
         # train
         model.train()
         losses = []
         best_loss = 20.0
-        for epoch in range(self.config.num_epochs):
+        for epoch in range(self.config.NUM_EPOCHS):
             t = timer()
             batch_losses = []
-            for i, (images, labels) in enumerate(self.train_loader):
+            for i, (images, labels) in enumerate(train_loader):
                 images = Variable(images).to(self.device)
                 labels = Variable(labels, requires_grad=False).to(self.device)
 
@@ -114,7 +68,7 @@ class Trainer:
             # saving model
             if np.mean(batch_losses) < best_loss:
                 best_loss = np.mean(batch_losses)
-                torch.save({"state_dict": model.state_dict()}, "model_best.pth.tar")
+                torch.save({"state_dict": model.state_dict()}, self.model_save_path)
 
             # Log the losses in the writer
             # Log the loss and accuracy values at the end of each epoch
@@ -130,40 +84,40 @@ class Trainer:
                         timer() - t,
                     )
                 )
-            elif (epoch + 1) % 25 == 0:
+            elif (epoch + 1) % self.config.SHOW_PROGRESS_AFTER_EPOCH == 0:
                 model.eval()
-                batch_dice_score_valid = []
-                for i, (images, labels) in enumerate(self.test_loader):
-                    images = Variable(images).to(self.device)
-                    labels = Variable(labels, requires_grad=False).to(self.device)
-                    out = model(images)
-                    out = F.sigmoid(out)
-                    dice_score = 1 - self.dice_loss(inputs=out, targets=labels).item()
-                    batch_dice_score_valid.append(dice_score)
-                if self.config.print_res:
-                    print(
-                        "Dice Coefficient of the networ on the 10000 test images: %.2f %%"
-                        % (np.mean(batch_dice_score_valid))
-                    )
-                writer.add_scalar(
-                    "Loss/validation_dice_score", np.mean(batch_dice_score_valid), epoch
+                df = self.predict(model,test_dataset=test_dataset)
+                iou = df["jaccard"].mean().item()
+                f1 = df["f1"].mean().item()
+                recall = df["recall"].mean().item()
+                precision = df["precision"].mean().item()
+                accuracy = df["accuracy"].mean().item()
+                print(
+                    "Epoch [%d/%d], IOU: %.6f, F1: %.6f, Recall: %.6f, Precision: %.6f, Accuracy: %.6f",
+                    epoch + 1,
+                    self.config.NUM_EPOCHS,
+                    iou,
+                    f1,
+                    recall,
+                    precision,
+                    accuracy,
                 )
+
+                writer.add_scalar("Loss/validation_dice_score", f1, epoch)
+                writer.add_scalar("Loss/validation_iou_score", iou, epoch)
+                writer.add_scalar("Loss/validation_accuracy_score", accuracy, epoch)
         writer.close()
         return model, losses
 
-    def predict(self, model):
-        model.eval()
-        results = {"id": [], "metrics": []}
-        for i, (images, labels) in enumerate(self.test_loader):
-            images = Variable(images).to(self.device)
-            labels = Variable(labels, requires_grad=False).to(self.device)
-            out = model(images)
-            out = F.sigmoid(out)
-            results["id"].append(i)
-            results["metrics"].append(
-                calculate_metrics(y_true=labels, y_pred=out, threshold=0.5)
-            )
-        return results
+    def predict(self, model,test_dataset):
+        df = evaluate_test_data(
+            model=model,
+            torch_dataset=test_dataset,
+            torch_device=self.device,
+            RESULT_DIR=self.config.RESULTS_DIR,
+            THRESHOLD=self.config.THRESHOLD,
+        )
+        return df
 
 
 if __name__ == "__main__":

@@ -7,10 +7,12 @@ import torchvision.transforms as tf
 import matplotlib.gridspec as gsp
 import matplotlib.pyplot as plt
 import matplotlib
+
 matplotlib.use("Agg")
 
 
 from torch.autograd import Variable
+from torch.utils.data import DataLoader
 from datetime import datetime
 from matplotlib.lines import Line2D
 from sklearn.metrics import (
@@ -217,50 +219,58 @@ def save_seed_samples(fname, indices):
 
     plt.savefig(fname)
 
+
 def plot_sample(x, y, out, cnt, RESULT_DIR, THRESHOLD):
     x = x.detach().cpu().numpy().transpose(1, 2, 0)
     y = y.detach().cpu().numpy().transpose(1, 2, 0)
     out = out.detach().cpu().numpy().transpose(1, 2, 0)
-    
+
     # Convert to grayscale
     # x_gray = np.dot(x[..., :3], [0.2989, 0.5870, 0.1140])
-    
+
     y = y > THRESHOLD
     out = out > THRESHOLD
     y = y.astype(np.uint8)
     out = out.astype(np.uint8)
-    
+
     # Find contours
-    y_contours, _ = cv2.findContours(y[..., 0], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    out_contours, _ = cv2.findContours(out[..., 0], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
+    y_contours, _ = cv2.findContours(
+        y[..., 0], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+    out_contours, _ = cv2.findContours(
+        out[..., 0], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+
     fig, ax = plt.subplots(figsize=(5, 5))
-    
+
     # Plot the grayscale image
-    ax.imshow(x, cmap='gray')
-    
+    ax.imshow(x, cmap="gray")
+
     # Plot ground truth contours in blue
     for contour in y_contours:
-        ax.plot(contour[:, 0, 0], contour[:, 0, 1], color='blue', linewidth=2)
-    
+        ax.plot(contour[:, 0, 0], contour[:, 0, 1], color="blue", linewidth=2)
+
     # Plot predicted contours in red
     for contour in out_contours:
-        ax.plot(contour[:, 0, 0], contour[:, 0, 1], color='red', linewidth=2)
-    
-     # Create custom legend handles
-    custom_lines = [Line2D([0], [0], color='blue', lw=2, label='Ground Truth'),
-                    Line2D([0], [0], color='red', lw=2, label='Prediction')]
-    
+        ax.plot(contour[:, 0, 0], contour[:, 0, 1], color="red", linewidth=2)
+
+    # Create custom legend handles
+    custom_lines = [
+        Line2D([0], [0], color="blue", lw=2, label="Ground Truth"),
+        Line2D([0], [0], color="red", lw=2, label="Prediction"),
+    ]
+
     # Add legend to the plot
-    ax.legend(handles=custom_lines, loc='upper right')
-    ax.axis('off')
-    ax.set_title('Visualization of Segmented Thyroid Nodules')
-    
+    ax.legend(handles=custom_lines, loc="upper right")
+    ax.axis("off")
+    ax.set_title("Visualization of Segmented Thyroid Nodules")
+
     # Save the figure
     fig.savefig(os.path.join(RESULT_DIR, f"results_sample_{cnt}.png"))
     plt.show()
-    
+
     return x, y, out
+
 
 def calculate_metrics(y_true, y_pred, threshold):
     # Ground truth
@@ -283,3 +293,40 @@ def calculate_metrics(y_true, y_pred, threshold):
     score_acc = accuracy_score(y_true, y_pred)
 
     return score_jaccard, score_f1, score_recall, score_precision, score_acc
+
+
+def _get_device():
+    if torch.cuda.is_available():
+        print("Using GPU")
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        print("Using Apple MPS")
+        device = torch.device("mps")
+    else:
+        print("Using CPU")
+        device = torch.device("cpu")
+    return device
+
+
+def _get_dataloaders(
+    train_dataset,
+    test_dataset,
+    BATCH_SIZE,
+    NUM_WORKERS,
+    SHUFFLE_TRAIN=True,
+    SHUFFLE_TEST=False,
+):
+
+    train_loader = DataLoader(
+        dataset=train_dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=SHUFFLE_TRAIN,
+        num_workers=NUM_WORKERS,
+    )
+    test_loader = DataLoader(
+        dataset=test_dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=SHUFFLE_TEST,
+        num_workers=NUM_WORKERS,
+    )
+    return train_loader, test_loader

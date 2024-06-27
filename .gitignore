@@ -20,3 +20,4 @@ model_best.pth.tar
 Thyroid_Segmentation_Experiment_07_TN3K_AttentionUNetPP_BestFold2_WeightedLoss_DeepSup_Last3Stages_Gradual_DataAugmentation_BatchLossReprod_LastIteration.pth
 *.tar
 *.tar
+*.zip
