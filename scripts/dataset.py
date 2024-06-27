@@ -1,15 +1,15 @@
 import os
 import numpy as np
-import cv2
-import torch
+import cv2 # type: ignore
+import torch # type: ignore
 
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset # type: ignore
 from glob import glob
-# from torchvision import transforms
+from torchvision import transforms as tf # type: ignore
 
 
 class ThyroidNodules(Dataset):
-    def __init__(self, images_path, masks_path, image_size):
+    def __init__(self, images_path, masks_path, image_size, transform=None):
         """
         Initialize the Lung Nodules Dataset Loader.
 
@@ -21,26 +21,31 @@ class ThyroidNodules(Dataset):
         self.images_path = images_path
         self.masks_path = masks_path
         self.to_return_size = image_size
-        self.n_samples = len(self.images_path)
-        # self.transform = transforms.Compose([
-        #     transforms.ToTensor(),
-        #     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
-        # ])
+        self.transform = transform
+        self.images = []
+        self.masks = []
+        for i in images_path:
+            image = cv2.imread(i, cv2.IMREAD_COLOR)
+            image = cv2.resize(image, self.to_return_size)
+            self.images.append(image)
+        for i in masks_path:
+            mask = cv2.imread(i, cv2.IMREAD_GRAYSCALE)
+            mask = cv2.resize(mask, self.to_return_size)
+            self.masks.append(mask)
+        self.data = {'images': self.images, 'masks': self.masks}
+        self.n_samples = len(self.images)
 
     def __getitem__(self, index):
         """Reading image"""
-        image = cv2.imread(self.images_path[index], cv2.IMREAD_COLOR)
-        # image = self.transform(image)
-        image = cv2.resize(image, self.to_return_size)
-        image = image / 255.0
+        image = self.images[index]
         image = np.transpose(image, (2, 0, 1))
         image = image.astype(np.float32)
         image = torch.from_numpy(image)
+        if self.transform:
+            image = self.transform(image)
 
         """Reading mask"""
-        mask = cv2.imread(self.masks_path[index], cv2.IMREAD_GRAYSCALE)
-        # mask = self.transform(mask)
-        mask = cv2.resize(mask, self.to_return_size)
+        mask  = self.masks[index]
         mask = mask / mask.max()
         mask = np.expand_dims(mask, axis=0)
         mask = mask.astype(np.float32)
@@ -51,13 +56,32 @@ class ThyroidNodules(Dataset):
     def __len__(self):
         return self.n_samples
 
+
 if __name__ == "__main__":
     dataset = ThyroidNodules(
         image_size=(256, 256),
-        images_path= sorted(glob(os.path.join("/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-image",'*'))),
-        masks_path= sorted(glob(os.path.join("/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-mask",'*')))
+        images_path=sorted(
+            glob(
+                os.path.join(
+                    "/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-image",
+                    "*",
+                )
+            )
+        ),
+        masks_path=sorted(
+            glob(
+                os.path.join(
+                    "/Users/eloise-em/Documents/Haris Ghafoor Archive/Research and Development/RnD/Thyroid Dataset/tn3k/trainval-mask",
+                    "*",
+                )
+            )
+        ),
+        transform=tf.Compose(
+            [
+                tf.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+            ]
+        ),
     )
     # print(dataset[0].shape)
-    print("Sample Image Shape",dataset.__getitem__(0)[0].shape)
-    print("Sample Mask Shape",dataset.__getitem__(0)[1].shape)
-
+    print("Sample Image Shape", dataset.__getitem__(0)[0].shape)
+    print("Sample Mask Shape", dataset.__getitem__(0)[1].shape)

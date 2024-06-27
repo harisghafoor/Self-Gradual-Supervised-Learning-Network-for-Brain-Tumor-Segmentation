@@ -30,3 +30,4 @@ class Config:
     model_save_path = f"models/{experiment_name}/model_best.pth.tar"
     NUM_WORKERS = 0
     SHOW_PROGRESS_AFTER_EPOCH = 50
+    RATIO_LABELLED_SAMPLES = 10 # 10% labelled samples

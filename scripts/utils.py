@@ -44,7 +44,11 @@ class GaussianNoise(nn.Module):
 
 
 def prepare_dataset(
-    train_x: list, train_y: list, valid_x: list, valid_y: list, H: int, W: int
+    train_x: list, train_y: list,
+    valid_x: list, valid_y: list,
+    H: int, W: int,
+    mean:list[float],
+    std:list[float],
 ):
     """Create datasets and dataloaders for this fold
 
@@ -59,22 +63,26 @@ def prepare_dataset(
     Returns:
         torch.utils.data.Dataset
     """
-    # normalize data
-    m = (0.1307,)
-    st = (0.3081,)
-    normalize = tf.Normalize(m, st)
     # Create datasets and dataloaders for this fold
     train_dataset = ThyroidNodules(
         train_x,
         train_y,
         image_size=(H, W),
-        # transform=tf.Compose([tf.ToTensor(), normalize]),
-    )
+        transform= tf.Compose([
+                tf.Normalize(mean=mean,
+                std=std)
+                ]),          
+        )
+    
     test_dataset = ThyroidNodules(
         valid_x,
         valid_y,
         image_size=(H, W),
-    )
+        transform= tf.Compose([
+                tf.Normalize(mean=mean,
+                std=std)
+                ]),
+        )
     return train_dataset, test_dataset
 
 
@@ -363,3 +371,35 @@ def _get_dataloaders(
         num_workers=NUM_WORKERS,
     )
     return train_loader, test_loader
+
+
+def get_normalized_mean(paths):
+    list_m1 = []
+    list_m2 = []
+    list_m3 = []
+    for path_i in paths:
+        img = cv2.imread(path_i, cv2.IMREAD_COLOR)
+        img = cv2.resize(img, (256, 256))
+        # print("img shape", img.shape)
+        # break
+        m1, m2, m3 = img[:, :,0].mean(), img[:, :,1].mean(), img[:, :,2].mean()
+        list_m1.append(m1)
+        list_m2.append(m2)
+        list_m3.append(m3)
+    return [np.mean(list_m1), np.mean(list_m2), np.mean(list_m3)], [
+        np.std(list_m1),
+        np.std(list_m2),
+        np.std(list_m3),
+    ]
+
+def get_labelled_indices(train_x,RATIO_LABELLED_SAMPLES):
+    num_of_labelled_samples = int(len(train_x) / RATIO_LABELLED_SAMPLES)
+    print("Number of labelled samples : %d" % num_of_labelled_samples)
+    indices = np.random.choice(len(train_x), num_of_labelled_samples, replace=False)
+    return indices
+def sabotage_samples(indices,train_dataset):
+    array = np.full((256, 256), -1)
+    # template_array = template_array.fill(0.5)
+    for i in indices:
+        train_dataset.masks[i] = array
+    return train_dataset

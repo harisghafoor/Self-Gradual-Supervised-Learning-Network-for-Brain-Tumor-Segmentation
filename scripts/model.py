@@ -10,7 +10,7 @@ from torch.nn.utils import weight_norm
 
 class GaussianNoise(nn.Module):
 
-    def __init__(self, batch_size, input_shape=(1, 28, 28), std=0.05, device=None):
+    def __init__(self, batch_size, input_shape=(3, 256, 256), std=0.05, device=None):
         super(GaussianNoise, self).__init__()
         self.shape = (batch_size,) + input_shape
         self.noise = Variable(torch.zeros(self.shape)).to(device)
@@ -85,9 +85,11 @@ class Unet(nn.Module):
         output_ch (int): Number of output channels (default: 1)
     """
 
-    def __init__(self, img_ch=3, output_ch=1):
+    def __init__(self, img_ch=3, output_ch=1,batch_size = 16, std = 0.1, p=0.5, device=None):
         super(Unet, self).__init__()
-
+        self.std = std
+        self.device = device
+        self.gn = GaussianNoise(batch_size, std=self.std, device=device)
         self.MaxPool = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.Conv1 = ConvBlock(img_ch, 64)
@@ -112,6 +114,7 @@ class Unet(nn.Module):
         self.UpConv1 = ConvBlock(128, 64)
 
         self.final_conv = nn.Conv2d(64, output_ch, kernel_size=1, stride=1, padding=0)
+        self.drop = nn.Dropout(p)
 
     def forward(self, x):
         """
@@ -124,6 +127,9 @@ class Unet(nn.Module):
             out (torch.Tensor): Output tensor of shape (batch_size, output_channels, height, width)
             ds_out (list): List of deep supervision outputs, each of shape (batch_size, output_channels, height, width)
         """
+        if self.training:
+            x = self.gn(x)
+
         e1 = self.Conv1(x)
         # print("Conv1 Shape : ", e1.shape)
         p1 = self.MaxPool(e1)
@@ -180,18 +186,20 @@ class Unet(nn.Module):
         # print("Deconv1 Final Shape : ", d1.shape)
 
         out = self.final_conv(d1)
+        out = self.drop(out)
+
         # out = torch.sigmoid(out)
         return out
 
 
 if __name__ == "__main__":
     device = torch.device("cpu")
-    # x = torch.randn((16, 3, 512, 512)).to(device)
+    x = torch.randn((16, 3, 256, 256)).to(device)
     f = Unet().to(device)
-    # main_output = f(x)
-    # print("Main Input Shape:", x.shape)
-    # print("Main Output Shape:", main_output.shape)
+    main_output = f(x)
+    print("Main Input Shape:", x.shape)
+    print("Main Output Shape:", main_output.shape)
     # print(f)
-    print(summary(f, (3, 512, 512)))
+    # print(summary(f, (3, 512, 512)))
 #     print("Second Last Decoder Output Shape:", ds_outputs[0].shape)
 #     print("Third Last Decoder Output Shape:", ds_outputs[1].shape)
