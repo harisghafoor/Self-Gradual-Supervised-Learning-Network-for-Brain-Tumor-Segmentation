@@ -1,9 +1,9 @@
 import os
-import torch
+import torch # type: ignore
 import pandas as pd
-import torch.nn.functional as F
+import torch.nn.functional as F # type: ignore
 
-from tqdm import tqdm
+from tqdm import tqdm # type: ignore
 
 from scripts.utils import calculate_metrics, plot_sample
 from timeit import default_timer as timer

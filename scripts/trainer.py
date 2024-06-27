@@ -1,13 +1,13 @@
 import os
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import torch  # type: ignore
+import torch.nn as nn  # type: ignore
+import torch.nn.functional as F  # type: ignore
 
-from torch.autograd import Variable
+from torch.autograd import Variable  # type: ignore
 from timeit import default_timer as timer
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter  # type: ignore
 
 from scripts.utils import prepare_dataset, calculate_metrics
 from scripts.test import evaluate_test_data
@@ -19,8 +19,8 @@ from glob import glob
 
 
 class Trainer:
-    """  Pytorch Abstraction Trainer class for training the model
-    """
+    """Pytorch Abstraction Trainer class for training the model"""
+
     def __init__(self, seed, device, model, config_file) -> None:
         self.seed = seed
         self.device = device
@@ -34,7 +34,7 @@ class Trainer:
         return SummaryWriter(log_dir=self.config.experiment_name)
 
     def fit(self, train_loader, test_dataset) -> pd.DataFrame:
-        """ Fits the Training Data to the model to perform training
+        """Fits the Training Data to the model to perform training
 
         Args:
             train_loader (torch.utils.data.Dataloader)
@@ -98,7 +98,7 @@ class Trainer:
                 )
             elif (epoch + 1) % self.config.SHOW_PROGRESS_AFTER_EPOCH == 0:
                 model.eval()
-                df = self.predict(model,test_dataset=test_dataset)
+                df = self.predict(model, test_dataset=test_dataset)
                 iou = df["jaccard"].mean().item()
                 f1 = df["f1"].mean().item()
                 recall = df["recall"].mean().item()
@@ -121,7 +121,7 @@ class Trainer:
         writer.close()
         return model, losses
 
-    def predict(self, model,test_dataset):
+    def predict(self, model, test_dataset):
         df = evaluate_test_data(
             model=model,
             torch_dataset=test_dataset,
