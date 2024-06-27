@@ -33,10 +33,10 @@ def main(config):
     ssl = Trainer(seed=seed, device=device, model=model, config_file=config)
     # Prepare dataset
     train_dataset, test_dataset = prepare_dataset(
-        train_x=sorted(glob(os.path.join((config.train_x), "*")))[:40],
-        train_y=sorted(glob(os.path.join((config.train_y), "*")))[:40],
-        valid_x=sorted(glob(os.path.join((config.valid_x), "*")))[:40],
-        valid_y=sorted(glob(os.path.join((config.valid_y), "*")))[:40],
+        train_x=sorted(glob(os.path.join((config.train_x), "*")))[:],
+        train_y=sorted(glob(os.path.join((config.train_y), "*")))[:],
+        valid_x=sorted(glob(os.path.join((config.valid_x), "*")))[:],
+        valid_y=sorted(glob(os.path.join((config.valid_y), "*")))[:],
         H=config.H,
         W=config.W,
     )
