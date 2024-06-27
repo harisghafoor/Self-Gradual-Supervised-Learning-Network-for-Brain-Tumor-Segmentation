@@ -1,20 +1,25 @@
 import os
-import torch # type: ignore
+import torch  # type: ignore
 import pandas as pd
-import torch.nn.functional as F # type: ignore
+import torch.nn.functional as F  # type: ignore
 
-from tqdm import tqdm # type: ignore
+from tqdm import tqdm  # type: ignore
 
 from scripts.utils import calculate_metrics, plot_sample
 from timeit import default_timer as timer
 
 
-def evaluate_test_data(model, torch_dataset,
-                    torch_device, RESULT_DIR,
-                    THRESHOLD,save_plots = False,
-                    save_csv_file = False,
-                    show_progress = False):
-    """ Evaluate the model on the test data
+def evaluate_test_data(
+    model,
+    torch_dataset,
+    torch_device,
+    RESULT_DIR,
+    THRESHOLD,
+    save_plots=False,
+    save_csv_file=False,
+    show_progress=False,
+):
+    """Evaluate the model on the test data
 
     Args:
         model (nn.Module): _description_
@@ -47,7 +52,7 @@ def evaluate_test_data(model, torch_dataset,
                 out = F.sigmoid(out)
                 if save_plots:
                     plot_sample(x, y, out, cnt, RESULT_DIR, THRESHOLD)
-                
+
                 (jaccard, f1, recall_score, precision_score, accuracy_score) = (
                     calculate_metrics(y_true=y, y_pred=out, threshold=THRESHOLD)
                 )
