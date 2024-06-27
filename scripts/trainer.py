@@ -79,7 +79,7 @@ class Trainer:
                     "Epoch [%d/%d], Training Loss: %.6f, Time (this epoch): %.2f s"
                     % (
                         epoch + 1,
-                        self.config.num_epochs,
+                        self.config.NUM_EPOCHS,
                         np.mean(batch_losses),
                         timer() - t,
                     )
