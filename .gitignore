@@ -21,3 +21,4 @@ Thyroid_Segmentation_Experiment_07_TN3K_AttentionUNetPP_BestFold2_WeightedLoss_D
 *.tar
 *.tar
 *.zip
+.DS_Store
