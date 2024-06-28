@@ -123,6 +123,8 @@ class Trainer:
                 i = int(i)
                 epoch = int(epoch)
                 l.append(loss.item())
+                supl.append(sup_loss.item())
+                unsupl.append(unsup_loss.item())
             # All batches have been trained
             # Update the mean ensemble of outputs
             Z = (self.config.alpha * Z) + (
