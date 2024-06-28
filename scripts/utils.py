@@ -397,9 +397,15 @@ def get_labelled_indices(train_x,RATIO_LABELLED_SAMPLES):
     print("Number of labelled samples : %d" % num_of_labelled_samples)
     indices = np.random.choice(len(train_x), num_of_labelled_samples, replace=False)
     return indices
-def sabotage_samples(indices,train_dataset):
+def sabotage_samples(labelled_idxs,train_dataset):
+    # array = np.full((256, 256), -1)
+    # unlabelled_idxs = set(labelled_indices) - set(train_dataset
+    # # template_array = template_array.fill(0.5)
+    # for i in range(len(train_dataset)):
+    #     train_dataset.masks[i] = array
     array = np.full((256, 256), -1)
+    unlabelled_idxs = list(set(np.arange(len(train_dataset))) - set(labelled_idxs))
     # template_array = template_array.fill(0.5)
-    for i in indices:
+    for i in unlabelled_idxs:
         train_dataset.masks[i] = array
-    return train_dataset
+    return unlabelled_idxs,train_dataset

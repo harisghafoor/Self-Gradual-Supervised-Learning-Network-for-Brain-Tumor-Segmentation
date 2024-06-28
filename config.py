@@ -31,3 +31,9 @@ class Config:
     NUM_WORKERS = 0
     SHOW_PROGRESS_AFTER_EPOCH = 50
     RATIO_LABELLED_SAMPLES = 10 # 10% labelled samples
+    # Need to replace with actual parameters for the dataset
+    max_epochs = 10
+    max_val = 10 
+    ramp_up_mult = -5.0
+    k = 1000
+    # n_samples 
