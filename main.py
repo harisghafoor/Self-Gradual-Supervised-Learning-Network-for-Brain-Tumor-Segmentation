@@ -64,7 +64,7 @@ def main(config: object) -> pd.DataFrame:
     labelled_indices = get_labelled_indices(
         train_dataset.images, RATIO_LABELLED_SAMPLES=config.RATIO_LABELLED_SAMPLES
     )
-
+    config.k = len(labelled_indices)
     unlabelled_idxs, train_dataset = sabotage_samples(labelled_indices, train_dataset)
     
     assert np.all(np.array(train_dataset.masks)[unlabelled_idxs[0]] == -1)

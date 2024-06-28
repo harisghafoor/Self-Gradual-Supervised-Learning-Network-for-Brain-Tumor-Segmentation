@@ -34,6 +34,6 @@ class Config:
     max_epochs = 50
     max_val = 20
     ramp_up_mult = -5.0
-    k = 1000 # need to replace with actual value
+    k = 287 # need to replace with actual value
     alpha = 0.6
     # n_samples 

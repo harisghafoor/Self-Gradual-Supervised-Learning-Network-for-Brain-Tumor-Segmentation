@@ -392,9 +392,10 @@ def get_normalized_mean(paths):
         np.std(list_m3),
     ]
 
-def get_labelled_indices(train_x,RATIO_LABELLED_SAMPLES):
+def get_labelled_indices(train_x,RATIO_LABELLED_SAMPLES,debug=False):
     num_of_labelled_samples = int(len(train_x) / RATIO_LABELLED_SAMPLES)
-    print("Number of labelled samples : %d" % num_of_labelled_samples)
+    if debug:
+        print("Number of labelled samples : %d" % num_of_labelled_samples)
     indices = np.random.choice(len(train_x), num_of_labelled_samples, replace=False)
     return indices
 def sabotage_samples(labelled_idxs,train_dataset):
