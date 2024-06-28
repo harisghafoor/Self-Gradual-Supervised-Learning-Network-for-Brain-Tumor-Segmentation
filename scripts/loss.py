@@ -74,7 +74,6 @@ def compute_loss(output, target):
     Returns:
         tensor: loss
     """
-    output = torch.sigmoid(output)
     cross_entropy_loss = F.binary_cross_entropy_with_logits(
         output, target, reduction="mean"
     )

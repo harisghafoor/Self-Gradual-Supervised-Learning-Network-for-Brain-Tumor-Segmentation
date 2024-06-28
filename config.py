@@ -20,7 +20,7 @@ class Config:
     SHUFFLE_TRAIN = True
     SHUFFLE_TEST = False
     print_res = True
-    experiment_name = "fully_supervised_thyroid_nodules"
+    experiment_name = "Semi-Supervised 10 Percent Labelled"
     n_exps = 3
     seeds = rng.randint(10000, size=n_exps)
     # c = int(batch_size / 2)
@@ -31,9 +31,9 @@ class Config:
     NUM_WORKERS = 0
     SHOW_PROGRESS_AFTER_EPOCH = 50
     RATIO_LABELLED_SAMPLES = 10 # 10% labelled samples
-    # Need to replace with actual parameters for the dataset
-    max_epochs = 10
-    max_val = 10 
+    max_epochs = 50
+    max_val = 20
     ramp_up_mult = -5.0
-    k = 1000
+    k = 1000 # need to replace with actual value
+    alpha = 0.6
     # n_samples 
