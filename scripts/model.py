@@ -194,8 +194,9 @@ class Unet(nn.Module):
 
 if __name__ == "__main__":
     device = torch.device("cpu")
-    x = torch.randn((16, 3, 256, 256)).to(device)
-    f = Unet().to(device)
+    x = torch.randn((1, 3, 256, 256)).to(device)
+    f = Unet(img_ch=3, output_ch=1,batch_size = 16, std = 0.1, p=0.5, device=None).to(device)
+    f.train()
     main_output = f(x)
     print("Main Input Shape:", x.shape)
     print("Main Output Shape:", main_output.shape)
