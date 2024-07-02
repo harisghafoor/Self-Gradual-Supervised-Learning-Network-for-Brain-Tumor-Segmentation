@@ -134,21 +134,6 @@ class Trainer:
             # print loss
             # losses.append(np.mean(batch_losses))
             # saving model
-            if np.mean(l) < best_loss:
-                best_loss = np.mean(l)
-                torch.save({"state_dict": model.state_dict()}, self.model_save_path)
-
-            # if (epoch + 1) % 10 == 0:
-            if True:
-                print(
-                    "Epoch [%d/%d], Training Loss: %.6f, Time (this epoch): %.2f s"
-                    % (
-                        epoch + 1,
-                        self.config.NUM_EPOCHS,
-                        np.mean(l),
-                        timer() - t,
-                    )
-                )
             # handle metrics, losses, etc.
             eloss = np.mean(l)
             losses.append(eloss)
