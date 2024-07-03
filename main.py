@@ -62,7 +62,8 @@ def main(config: object) -> pd.DataFrame:
         std=std_per_channel,
     )
     labelled_indices = get_labelled_indices(
-        train_dataset.images, RATIO_LABELLED_SAMPLES=config.RATIO_LABELLED_SAMPLES
+        train_dataset.images, RATIO_LABELLED_SAMPLES=config.RATIO_LABELLED_SAMPLES,
+        seed = seed
     )
     config.k = len(labelled_indices)
     unlabelled_idxs, train_dataset = sabotage_samples(labelled_indices, train_dataset)

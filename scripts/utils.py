@@ -1,21 +1,21 @@
 import numpy as np
 import os
-import torch
-import cv2
-import torch.nn as nn
-import torchvision.transforms as tf
-import matplotlib.gridspec as gsp
-import matplotlib.pyplot as plt
-import matplotlib
+import torch  # type: ignore
+import cv2  # type: ignore
+import torch.nn as nn  # type: ignore
+import torchvision.transforms as tf  # type: ignore
+import matplotlib.gridspec as gsp  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
+import matplotlib  # type: ignore
 
 matplotlib.use("Agg")
 
 
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
+from torch.autograd import Variable  # type: ignore
+from torch.utils.data import DataLoader  # type: ignore
 from datetime import datetime
-from matplotlib.lines import Line2D
-from sklearn.metrics import (
+from matplotlib.lines import Line2D  # type: ignore
+from sklearn.metrics import (  # type: ignore
     accuracy_score,
     f1_score,
     jaccard_score,
@@ -44,11 +44,14 @@ class GaussianNoise(nn.Module):
 
 
 def prepare_dataset(
-    train_x: list, train_y: list,
-    valid_x: list, valid_y: list,
-    H: int, W: int,
-    mean:list[float],
-    std:list[float],
+    train_x: list,
+    train_y: list,
+    valid_x: list,
+    valid_y: list,
+    H: int,
+    W: int,
+    mean: list[float],
+    std: list[float],
 ):
     """Create datasets and dataloaders for this fold
 
@@ -68,21 +71,31 @@ def prepare_dataset(
         train_x,
         train_y,
         image_size=(H, W),
-        transform= tf.Compose([
-                tf.Normalize(mean=mean,
-                std=std)
-                ]),          
-        )
-    
+        transform=tf.Compose(
+            [
+                tf.Normalize(mean=mean, std=std),
+            ]
+        ),
+    )
+
     test_dataset = ThyroidNodules(
         valid_x,
         valid_y,
         image_size=(H, W),
-        transform= tf.Compose([
-                tf.Normalize(mean=mean,
-                std=std)
-                ]),
-        )
+        transform=tf.Compose(
+            [
+                # tf.ToTensor(),
+                tf.RandomRotation(90),
+                tf.RandomAffine(
+                    degrees=0,
+                    translate=(0.2, 0.2),
+                    scale=(0.8, 1.2),
+                    shear=10
+                ),
+                tf.Normalize(mean=mean, std=std),
+            ]
+        ),
+    )
     return train_dataset, test_dataset
 
 
@@ -175,72 +188,72 @@ def save_losses(losses, sup_losses, unsup_losses, fname, labels=None):
     plt.savefig(fname)
 
 
-def save_exp(time, losses, sup_losses, unsup_losses, accs, accs_best, idxs, config):
+# def save_exp(time, losses, sup_losses, unsup_losses, accs, accs_best, idxs, config):
 
-    def save_txt(fname, accs, config):
-        with open(fname, "w") as fp:
-            fp.write("GLOB VARS\n")
-            fp.write("n_exp        = {}\n".format(config.n_exp))
-            fp.write("k            = {}\n".format(config.k))
-            fp.write("MODEL VARS\n")
-            fp.write("drop         = {}\n".format(config.drop))
-            fp.write("std          = {}\n".format(config.std))
-            fp.write("w_norm       = {}\n".format(config.w_norm))
-            fp.write("OPTIM VARS\n")
-            fp.write("lr           = {}\n".format(config.lr))
-            fp.write("batch_size   = {}\n".format(config.batch_size))
-            fp.write("TEMP ENSEMBLING VARS\n")
-            fp.write("alpha        = {}\n".format(config.alpha))
-            fp.write("data_norm    = {}\n".format(config.data_norm))
-            fp.write("divide_by_bs = {}\n".format(config.divide_by_bs))
-            fp.write("\nRESULTS\n")
-            fp.write("best accuracy : {}\n".format(np.max(accs)))
-            fp.write("accuracy : {} (+/- {})\n".format(np.mean(accs), np.std(accs)))
-            fp.write("accs : {}\n".format(accs))
+#     def save_txt(fname, accs, config):
+#         with open(fname, "w") as fp:
+#             fp.write("GLOB VARS\n")
+#             fp.write("n_exp        = {}\n".format(config.n_exp))
+#             fp.write("k            = {}\n".format(config.k))
+#             fp.write("MODEL VARS\n")
+#             fp.write("drop         = {}\n".format(config.drop))
+#             fp.write("std          = {}\n".format(config.std))
+#             fp.write("w_norm       = {}\n".format(config.w_norm))
+#             fp.write("OPTIM VARS\n")
+#             fp.write("lr           = {}\n".format(config.lr))
+#             fp.write("batch_size   = {}\n".format(config.batch_size))
+#             fp.write("TEMP ENSEMBLING VARS\n")
+#             fp.write("alpha        = {}\n".format(config.alpha))
+#             fp.write("data_norm    = {}\n".format(config.data_norm))
+#             fp.write("divide_by_bs = {}\n".format(config.divide_by_bs))
+#             fp.write("\nRESULTS\n")
+#             fp.write("best accuracy : {}\n".format(np.max(accs)))
+#             fp.write("accuracy : {} (+/- {})\n".format(np.mean(accs), np.std(accs)))
+#             fp.write("accs : {}\n".format(accs))
 
-    labels = ["seed_" + str(sd) for sd in config.seeds]
-    if not os.path.isdir("exps"):
-        os.mkdir("exps")
-    time_dir = os.path.join("exps", time)
-    if not os.path.isdir(time_dir):
-        os.mkdir(time_dir)
-    fname_bst = os.path.join("exps", time, "training_best.png")
-    fname_fig = os.path.join("exps", time, "training_all.png")
-    fname_smr = os.path.join("exps", time, "summary.txt")
-    fname_sd = os.path.join("exps", time, "seed_samples")
-    best = np.argmax(accs_best)
-    save_losses([losses[best]], [sup_losses[best]], [unsup_losses[best]], fname_bst)
-    save_losses(losses, sup_losses, unsup_losses, fname_fig, labels=labels)
-    for seed, indices in zip(config.seeds, idxs):
-        save_seed_samples(fname_sd + "_seed" + str(seed) + ".png", indices)
-    save_txt(fname_smr, accs_best, config=config)
+#     labels = ["seed_" + str(sd) for sd in config.seeds]
+#     if not os.path.isdir("exps"):
+#         os.mkdir("exps")
+#     time_dir = os.path.join("exps", time)
+#     if not os.path.isdir(time_dir):
+#         os.mkdir(time_dir)
+#     fname_bst = os.path.join("exps", time, "training_best.png")
+#     fname_fig = os.path.join("exps", time, "training_all.png")
+#     fname_smr = os.path.join("exps", time, "summary.txt")
+#     fname_sd = os.path.join("exps", time, "seed_samples")
+#     best = np.argmax(accs_best)
+#     save_losses([losses[best]], [sup_losses[best]], [unsup_losses[best]], fname_bst)
+#     save_losses(losses, sup_losses, unsup_losses, fname_fig, labels=labels)
+#     for seed, indices in zip(config.seeds, idxs):
+#         save_seed_samples(fname_sd + "_seed" + str(seed) + ".png", indices)
+#     save_txt(fname_smr, accs_best, config=config)
 
 
-def save_seed_samples(fname, indices):
-    train_dataset, test_dataset = prepare_mnist(path=config.dataset_path)
-    imgs = train_dataset.train_data[indices.numpy().astype(int)]
+# def save_seed_samples(fname, indices):
+#     train_dataset, test_dataset = prepare_mnist(path=config.dataset_path)
+#     imgs = train_dataset.train_data[indices.numpy().astype(int)]
 
-    plt.style.use("classic")
-    fig = plt.figure(figsize=(15, 60))
-    gs = gsp.GridSpec(20, 5, width_ratios=[1, 1, 1, 1, 1], wspace=0.0, hspace=0.0)
-    for ll in range(100):
-        i = ll // 5
-        j = ll % 5
-        img = imgs[ll].numpy()
-        ax = plt.subplot(gs[i, j])
-        ax.tick_params(
-            axis="both",
-            which="both",
-            bottom="off",
-            top="off",
-            labelbottom="off",
-            left="off",
-            right="off",
-            labelleft="off",
-        )
-        ax.imshow(img)
+#     plt.style.use("classic")
+#     fig = plt.figure(figsize=(15, 60))
+#     gs = gsp.GridSpec(20, 5, width_ratios=[1, 1, 1, 1, 1], wspace=0.0, hspace=0.0)
+#     for ll in range(100):
+#         i = ll // 5
+#         j = ll % 5
+#         img = imgs[ll].numpy()
+#         ax = plt.subplot(gs[i, j])
+#         ax.tick_params(
+#             axis="both",
+#             which="both",
+#             bottom="off",
+#             top="off",
+#             labelbottom="off",
+#             left="off",
+#             right="off",
+#             labelleft="off",
+#         )
+#         ax.imshow(img)
 
-    plt.savefig(fname)
+#     plt.savefig(fname)
 
 
 def plot_sample(x, y, out, cnt, RESULT_DIR, THRESHOLD):
@@ -382,7 +395,7 @@ def get_normalized_mean(paths):
         img = cv2.resize(img, (256, 256))
         # print("img shape", img.shape)
         # break
-        m1, m2, m3 = img[:, :,0].mean(), img[:, :,1].mean(), img[:, :,2].mean()
+        m1, m2, m3 = img[:, :, 0].mean(), img[:, :, 1].mean(), img[:, :, 2].mean()
         list_m1.append(m1)
         list_m2.append(m2)
         list_m3.append(m3)
@@ -392,13 +405,17 @@ def get_normalized_mean(paths):
         np.std(list_m3),
     ]
 
-def get_labelled_indices(train_x,RATIO_LABELLED_SAMPLES,debug=False):
+
+def get_labelled_indices(train_x, RATIO_LABELLED_SAMPLES, debug=False, seed=None):
+    np.random.seed(seed)
     num_of_labelled_samples = int(len(train_x) / RATIO_LABELLED_SAMPLES)
     if debug:
         print("Number of labelled samples : %d" % num_of_labelled_samples)
     indices = np.random.choice(len(train_x), num_of_labelled_samples, replace=False)
     return indices
-def sabotage_samples(labelled_idxs,train_dataset):
+
+
+def sabotage_samples(labelled_idxs, train_dataset):
     # array = np.full((256, 256), -1)
     # unlabelled_idxs = set(labelled_indices) - set(train_dataset
     # # template_array = template_array.fill(0.5)
@@ -409,4 +426,4 @@ def sabotage_samples(labelled_idxs,train_dataset):
     # template_array = template_array.fill(0.5)
     for i in unlabelled_idxs:
         train_dataset.masks[i] = array
-    return unlabelled_idxs,train_dataset
+    return unlabelled_idxs, train_dataset

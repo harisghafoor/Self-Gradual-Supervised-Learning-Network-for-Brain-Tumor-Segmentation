@@ -153,7 +153,7 @@ class Trainer:
             if eloss < best_loss:
                 best_loss = np.mean(l)
                 torch.save({"state_dict": model.state_dict()}, self.model_save_path)
-            
+
             if (epoch + 1) % 10 == 0:
                 # if True:
                 print(

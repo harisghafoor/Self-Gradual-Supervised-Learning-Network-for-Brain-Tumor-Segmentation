@@ -6,7 +6,8 @@ import torch # type: ignore
 from torch.utils.data import Dataset # type: ignore
 from glob import glob
 from torchvision import transforms as tf # type: ignore
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class ThyroidNodules(Dataset):
     def __init__(self, images_path, masks_path, image_size, transform=None):
@@ -78,7 +79,9 @@ if __name__ == "__main__":
         ),
         transform=tf.Compose(
             [
+                tf.ToTensor(),  # Convert to tensor
                 tf.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+               
             ]
         ),
     )
