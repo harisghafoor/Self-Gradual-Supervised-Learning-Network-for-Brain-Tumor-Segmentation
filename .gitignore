@@ -1,0 +1,25 @@
+
+*.tar
+*.0
+*.1
+*.pyc
+__pycache__/model.cpython-310.pyc
+/__pycache__
+*.tar
+model_best.pth.tar
+/model_best.pth/data
+/model_best.pth
+*.tar
+*.pyc
+*.pyc
+*.tar
+*.png
+/fully_supervised_thyroid_nodules
+/__pycache__
+*.pyc
+Thyroid_Segmentation_Experiment_07_TN3K_AttentionUNetPP_BestFold2_WeightedLoss_DeepSup_Last3Stages_Gradual_DataAugmentation_BatchLossReprod_LastIteration.pth
+*.tar
+*.tar
+*.zip
+.DS_Store
+/Semi-Supervised 10 Percent Labelled
